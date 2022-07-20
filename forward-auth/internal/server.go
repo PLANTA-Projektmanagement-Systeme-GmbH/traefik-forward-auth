@@ -115,7 +115,7 @@ func (s *Server) AuthHandler(providerName, rule string) http.HandlerFunc {
 		// Valid request
 		logger.Debugf("Allowing valid request ")
 		w.Header().Add("X-Forwarded-User", email)
-		w.Header().Add("X-Oidc-Token", oidc_token)
+		w.Header().Add("X-Forwarded-Access-Token", oidc_token)
 		w.WriteHeader(200)
 	}
 }

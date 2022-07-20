@@ -172,7 +172,7 @@ func TestServerForwardOIDCTokenWhenAuthHandlerValid(t *testing.T) {
 	res, _ := doHttpRequest(req, c)
 	assert.Equal(200, res.StatusCode, "valid request should be allowed")
 
-	oidc_token := res.Header["X-Oidc-Token"]
+	oidc_token := res.Header["X-Forwarded-Access-Token"]
 	assert.Len(oidc_token, 1, res)
 }
 
