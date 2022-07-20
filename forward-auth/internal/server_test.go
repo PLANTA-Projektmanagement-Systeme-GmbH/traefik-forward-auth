@@ -98,7 +98,7 @@ func TestServerAuthHandlerInvalid(t *testing.T) {
 
 	// Should catch invalid cookie
 	req = newDefaultHttpRequest("/foo")
-	c := MakeCookie(req, "test@example.com")
+	c := MakeCookie(req, "test@example.com", "token-value")
 	parts = strings.Split(c.Value, "|")
 	c.Value = fmt.Sprintf("bad|%s|%s", parts[1], parts[2])
 
@@ -107,7 +107,7 @@ func TestServerAuthHandlerInvalid(t *testing.T) {
 
 	// Should validate email
 	req = newDefaultHttpRequest("/foo")
-	c = MakeCookie(req, "test@example.com")
+	c = MakeCookie(req, "test@example.com", "token-value")
 	config.Domains = []string{"test.com"}
 
 	res, _ = doHttpRequest(req, c)
@@ -121,8 +121,8 @@ func TestServerAuthHandlerExpired(t *testing.T) {
 	config.Domains = []string{"test.com"}
 
 	// Should redirect expired cookie
-	req := newHTTPRequest("GET", "http://example.com/foo")
-	c := MakeCookie(req, "test@example.com")
+	req := newDefaultHttpRequest("/foo")
+	c := MakeCookie(req, "test@example.com", "token1")
 	res, _ := doHttpRequest(req, c)
 	require.Equal(t, 307, res.StatusCode, "request with expired cookie should be redirected")
 
@@ -147,8 +147,8 @@ func TestServerAuthHandlerValid(t *testing.T) {
 	config = newDefaultConfig()
 
 	// Should allow valid request email
-	req := newHTTPRequest("GET", "http://example.com/foo")
-	c := MakeCookie(req, "test@example.com")
+	req := newDefaultHttpRequest("/foo")
+	c := MakeCookie(req, "test@example.com", "token1")
 	config.Domains = []string{}
 
 	res, _ := doHttpRequest(req, c)
@@ -158,6 +158,22 @@ func TestServerAuthHandlerValid(t *testing.T) {
 	users := res.Header["X-Forwarded-User"]
 	assert.Len(users, 1, "valid request should have X-Forwarded-User header")
 	assert.Equal([]string{"test@example.com"}, users, "X-Forwarded-User header should match user")
+}
+
+func TestServerForwardOIDCTokenWhenAuthHandlerValid(t *testing.T) {
+	assert := assert.New(t)
+	config = newDefaultConfig()
+
+	// Should allow valid request email
+	req := newDefaultHttpRequest("/foo")
+	c := MakeCookie(req, "test@example.com", "token1")
+	config.Domains = []string{}
+
+	res, _ := doHttpRequest(req, c)
+	assert.Equal(200, res.StatusCode, "valid request should be allowed")
+
+	oidc_token := res.Header["X-Oidc-Token"]
+	assert.Len(oidc_token, 1, res)
 }
 
 func TestServerAuthCallback(t *testing.T) {

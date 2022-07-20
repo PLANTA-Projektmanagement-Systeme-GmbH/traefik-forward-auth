@@ -82,7 +82,7 @@ services:
       - INSECURE_COOKIE=true # Example assumes no https, do not use in production
     labels:
       - "traefik.http.middlewares.traefik-forward-auth.forwardauth.address=http://traefik-forward-auth:4181"
-      - "traefik.http.middlewares.traefik-forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User"
+      - "traefik.http.middlewares.traefik-forward-auth.forwardauth.authResponseHeaders=X-Forwarded-User, X-Oidc-Token"
       - "traefik.http.services.traefik-forward-auth.loadbalancer.server.port=4181"
 
   whoami:
@@ -455,6 +455,9 @@ rule.1.rule = Host(`dash.example.com`)
 rule.two.action = allow
 rule.two.rule = Host(`app.example.com`) && Path(`/public`)
 ```
+
+The OIDC/JWT token is set in the `X-Oidc-Token` header, to pass this on add this to the `authResponseHeaders` config option in traefik; the value is encrypt,
+and need to be decrypted.
 
 ### Operation Modes
 
