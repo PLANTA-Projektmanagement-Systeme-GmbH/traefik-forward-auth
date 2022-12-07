@@ -125,7 +125,7 @@ func ValidateDomains(email string, domains CommaSeparatedList) bool {
 
 // Get the redirect base
 func redirectBase(r *http.Request) string {
-	return fmt.Sprintf("%s://%s", r.Header.Get("X-Forwarded-Proto"), r.Host)
+	return fmt.Sprintf("%s://%s", "https", r.Host)
 }
 
 // Return url
@@ -136,7 +136,7 @@ func returnUrl(r *http.Request) string {
 // Get oauth redirect uri
 func redirectUri(r *http.Request) string {
 	if use, _ := useAuthDomain(r); use {
-		p := r.Header.Get("X-Forwarded-Proto")
+		p := "https"
 		return fmt.Sprintf("%s://%s%s", p, config.AuthHost, config.Path)
 	}
 
