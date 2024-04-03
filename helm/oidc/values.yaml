@@ -1,0 +1,102 @@
+# Default values for oidc.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+clusterDomain: cluster.local
+
+image:
+  repository: traefik
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets:
+  - name: hub
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: { }
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: { }
+
+podSecurityContext: { }
+# fsGroup: 2000
+
+securityContext: { }
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8888
+
+# OpenShift specific settings
+route:
+  enabled: false
+  annotations: { }
+#    link.argocd.argoproj.io/external-link: https://argocd.apps.sandbox.x8i5.p1.openshiftapps.com
+  host: oidc.apps.sandbox.x8i5.p1.openshiftapps.com
+
+ingress:
+  enabled: true
+  annotations: { }
+#    kubernetes.io/ingress.class: nginx
+#    cert-manager.io/issuer: oidc-letsencrypt
+#    kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: oidc.apps.sandbox.x8i5.p1.openshiftapps.com
+      paths:
+        - path: /
+        - path: /PlantaServerAdapter
+  tls: []
+#    - secretName: oidc-tls
+#      hosts:
+#        - oidc.apps.sandbox.x8i5.p1.openshiftapps.com
+
+resources: { }
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 2
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 1
+  #   memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: { }
+
+tolerations: []
+
+affinity: { }
+
+# OIDC configuration
+# For more information, see: https://help.planta.de/tec/all/de/oidc-mit-planta-secure-19792984.html
+oidcSettings:
+  issuer: https://keycloak.apps.sandbox.x8i5.p1.openshiftapps.com/auth/realms/example
+  clientID: 3b3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b
+  clientSecret: 3b3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b
+  redirectURL: https://oidc.apps.sandbox.x8i5.p1.openshiftapps.com
+  logoutURL: https://keycloak.apps.sandbox.x8i5.p1.openshiftapps.com/auth/realms/example/protocol/openid-connect/logout
