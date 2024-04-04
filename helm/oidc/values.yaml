@@ -95,8 +95,17 @@ affinity: { }
 # OIDC configuration
 # For more information, see: https://help.planta.de/tec/all/de/oidc-mit-planta-secure-19792984.html
 oidcSettings:
-  issuer: https://keycloak.apps.sandbox.x8i5.p1.openshiftapps.com/auth/realms/example
-  clientID: 3b3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b
-  clientSecret: 3b3b3b3b-3b3b-3b3b-3b3b-3b3b3b3b3b3b
-  redirectURL: https://oidc.apps.sandbox.x8i5.p1.openshiftapps.com
-  logoutURL: https://keycloak.apps.sandbox.x8i5.p1.openshiftapps.com/auth/realms/example/protocol/openid-connect/logout
+  # The following Secret is expected to be created by the user
+  # and should contain the following keys:
+  # - issuerURL
+  # - clientID
+  # - clientSecret
+  secretName: oidc-secret
+  insecureCookie: false
+  lifetime: 43200
+  webclient:
+    url: http://webclient.apps.sandbox.x8i5.p1.openshiftapps.com:5000
+    path: /_oauth
+  secure:
+    url: http://secure.apps.sandbox.x8i5.p1.openshiftapps.com:8181
+    path: /PlantaServerAdapter/_oauth
