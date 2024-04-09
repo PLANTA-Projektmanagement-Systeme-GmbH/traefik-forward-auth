@@ -1,6 +1,5 @@
 {{- if .Values.ingress.enabled -}}
   {{- $fullName := include "oidc.fullname" . -}}
-  {{- $svcPort := .Values.service.port -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -28,14 +27,19 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-          {{- range .paths }}
           - pathType: Prefix
-            path: {{ .path }}
+            path: /
             backend:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: {{ $svcPort }}
-          {{- end }}
+                  number: 4181
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: 4182
     {{- end }}
   {{- end }}

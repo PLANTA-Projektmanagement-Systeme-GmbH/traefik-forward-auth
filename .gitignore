@@ -3,3 +3,5 @@ traefik/
 bin/
 helm/oidc/templates/secrets.yml
 helm/oidc/override.yaml
+helm/oidc/Chart.lock
+helm/oidc/charts/

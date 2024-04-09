@@ -28,58 +28,12 @@ spec:
       serviceAccountName: {{ include "oidc.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      volumes:
-        - name: traefik-conf
-          configMap:
-            name: {{ include "oidc.fullname" . }}
+      terminationGracePeriodSeconds: 60
       containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
-            periodSeconds: 30
-            successThreshold: 1
-            timeoutSeconds: 5
-          startupProbe:
-            failureThreshold: 10
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
-            periodSeconds: 30
-            successThreshold: 1
-            timeoutSeconds: 5
-          livenessProbe:
-            failureThreshold: 2
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
-            periodSeconds: 300
-            successThreshold: 1
-            timeoutSeconds: 5
-          volumeMounts:
-            - name: traefik-conf
-              mountPath: /etc/traefik/traefik.toml
-              subPath: traefik.toml
-              readOnly: true
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
         - name: forward-auth-webclient
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: thomseddon/traefik-forward-auth:2
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: INSECURE_COOKIE
@@ -89,7 +43,7 @@ spec:
             - name: LIFETIME
               value: {{ .Values.oidcSettings.lifetime | quote }}
             - name: URL_PATH
-              value: {{ .Values.oidcSettings.webclient.urlPath | quote }}
+              value: {{ .Values.oidcSettings.webclient.path | quote }}
             - name: SECRET
               valueFrom:
                 secretKeyRef:
@@ -98,10 +52,7 @@ spec:
             - name: PORT
               value: "4181"
             - name: PROVIDERS_OIDC_ISSUER_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.oidcSettings.secretName }}
-                  key: issuerURL
+              value: {{ .Values.oidcSettings.issuerURL | quote }}
             - name: PROVIDERS_OIDC_CLIENT_ID
               valueFrom:
                 secretKeyRef:
@@ -113,14 +64,14 @@ spec:
                   name: {{ .Values.oidcSettings.secretName }}
                   key: clientSecret
           ports:
-            - name: http
+            - name: webclient-http
               containerPort: 4181
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
             httpGet:
               path: /
-              port: http
+              port: 4181
               scheme: HTTP
             periodSeconds: 30
             successThreshold: 1
@@ -129,7 +80,7 @@ spec:
             failureThreshold: 10
             httpGet:
               path: /
-              port: http
+              port: 4181
               scheme: HTTP
             periodSeconds: 30
             successThreshold: 1
@@ -138,7 +89,7 @@ spec:
             failureThreshold: 2
             httpGet:
               path: /
-              port: http
+              port: 4181
               scheme: HTTP
             periodSeconds: 300
             successThreshold: 1
@@ -148,7 +99,7 @@ spec:
         - name: forward-auth-secure
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: thomseddon/traefik-forward-auth:2
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: INSECURE_COOKIE
@@ -158,19 +109,16 @@ spec:
             - name: LIFETIME
               value: {{ .Values.oidcSettings.lifetime | quote }}
             - name: URL_PATH
-              value: {{ .Values.oidcSettings.secure.urlPath | quote }}
+              value: {{ .Values.oidcSettings.secure.path | quote }}
             - name: SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.oidcSettings.secretName }}
                   key: clientSecret
             - name: PORT
-              value: "4181"
+              value: "4182"
             - name: PROVIDERS_OIDC_ISSUER_URL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.oidcSettings.secretName }}
-                  key: issuerURL
+              value: {{ .Values.oidcSettings.issuerURL | quote }}
             - name: PROVIDERS_OIDC_CLIENT_ID
               valueFrom:
                 secretKeyRef:
@@ -182,14 +130,14 @@ spec:
                   name: {{ .Values.oidcSettings.secretName }}
                   key: clientSecret
           ports:
-            - name: http
-              containerPort: 4181
+            - name: secure-http
+              containerPort: 4182
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
             httpGet:
               path: /
-              port: http
+              port: 4182
               scheme: HTTP
             periodSeconds: 30
             successThreshold: 1
@@ -198,7 +146,7 @@ spec:
             failureThreshold: 10
             httpGet:
               path: /
-              port: http
+              port: 4182
               scheme: HTTP
             periodSeconds: 30
             successThreshold: 1
@@ -207,7 +155,7 @@ spec:
             failureThreshold: 2
             httpGet:
               path: /
-              port: http
+              port: 4182
               scheme: HTTP
             periodSeconds: 300
             successThreshold: 1

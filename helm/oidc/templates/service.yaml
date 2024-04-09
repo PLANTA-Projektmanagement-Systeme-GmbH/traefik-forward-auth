@@ -8,7 +8,41 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.port }}
+    - name: webclient-http
+      port: 4181
+      targetPort: 4181
+    - name: secure-http
+      port: 4182
+      targetPort: 4182
   selector:
     {{- include "oidc.selectorLabels" . | nindent 4 }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "oidc.fullname" . }}-webclient
+  namespace: {{ include "oidc.namespace" . }}
+  labels:
+    {{- include "oidc.labels" . | nindent 4 }}
+spec:
+  type: ExternalName
+  externalName: {{ .Values.oidcSettings.webclient.host }}
+  ports:
+  - name: http
+    port: {{ .Values.oidcSettings.webclient.port }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "oidc.fullname" . }}-secure
+  namespace: {{ include "oidc.namespace" . }}
+  labels:
+    {{- include "oidc.labels" . | nindent 4 }}
+spec:
+  type: ExternalName
+  externalName: {{ .Values.oidcSettings.secure.host }}
+  ports:
+  - name: http
+    port: {{ .Values.oidcSettings.secure.port }}
