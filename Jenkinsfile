@@ -24,8 +24,8 @@ pipeline {
               def helm = docker.image("${DOCKER_REGISTRY}/tools/helm:latest")
               helm.inside(){
                 sh '''
-                  helm dependency update
-                  helm dependency build
+                  helm dependency update oidc
+                  helm dependency build oidc
                   helm package oidc
                   helm push oidc-*.tgz "${CHART_BASE}"
                 '''
