@@ -125,7 +125,11 @@ func ValidateDomains(email string, domains CommaSeparatedList) bool {
 
 // Get the redirect base
 func redirectBase(r *http.Request) string {
-	return fmt.Sprintf("%s://%s", "https", r.Host)
+    scheme := "https"
+    if config.InsecureCookie {
+        scheme = "http"
+    }
+    return fmt.Sprintf("%s://%s", scheme, r.Host)
 }
 
 // Return url
