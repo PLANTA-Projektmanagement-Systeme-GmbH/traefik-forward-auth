@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "oidc.fullname" . }}
+  namespace: {{ include "oidc.namespace" . }}
+data:
+  traefik.toml: |
+    # --------------------- #
+    # Static Configuration  #
+    # --------------------- #
+
+
+    [global]
+    checkNewVersion = false
+
+    [entryPoints]
+    [entryPoints.web]
+    address = ":8888"
+
+    [ping]
+    entryPoint = "web"
+
+    [providers]
+    [providers.file]
+    filename = "/etc/traefik/traefik.toml"
+    watch = true
+
+    [log]
+    level = {{ .Values.logLevel | quote }} # DEBUG, PANIC, FATAL, ERROR, WARN, and INFO
+
+    # --------------------- #
+    # Dynamic Configuration #
+    # --------------------- #
+
+    [http]
+    [http.routers]
+    [http.routers.secure]
+    entryPoints = ["web"]
+    middlewares = ["traefik-forward-auth-secure"]
+    service = "secure"
+    rule = "PathPrefix(`/PlantaServerAdapter`)"
+    [http.routers.webclient]
+    entryPoints = ["web"]
+    middlewares = ["traefik-forward-auth-webclient"]
+    service = "webclient"
+    rule = "PathPrefix(`/`)"
+    [http.middlewares]
+    [http.middlewares.traefik-forward-auth-secure.forwardauth]
+    address = "http://localhost:4182"
+    authResponseHeaders = ["X-Forwarded-User"]
+    [http.middlewares.traefik-forward-auth-webclient.forwardauth]
+    address = "http://localhost:4181"
+    authResponseHeaders = ["X-Forwarded-User"]
+    [http.services]
+    [http.services.secure.loadBalancer]
+    [[http.services.secure.loadBalancer.servers]]
+    url = "http://{{ .Values.oidcSettings.secure.host }}:{{ .Values.oidcSettings.secure.port }}"
+    [http.services.webclient.loadBalancer]
+    [[http.services.webclient.loadBalancer.servers]]
+    url = "http://{{ .Values.oidcSettings.webclient.host }}:{{ .Values.oidcSettings.webclient.port }}"

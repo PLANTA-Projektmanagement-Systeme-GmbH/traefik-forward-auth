@@ -8,12 +8,9 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - name: webclient-http
-      port: 4181
-      targetPort: 4181
-    - name: secure-http
-      port: 4182
-      targetPort: 4182
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
   selector:
     {{- include "oidc.selectorLabels" . | nindent 4 }}
 

@@ -7,10 +7,14 @@ replicaCount: 1
 clusterDomain: cluster.local
 
 image:
-  repository: thomseddon/traefik-forward-auth
+  repository: traefik
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
+forwardAuthImage:
+  repository: registry.planta.services/tools/traefik-forward-auth
+  pullPolicy: IfNotPresent
+  tag: latest
 
 imagePullSecrets:
   - name: hub
@@ -21,7 +25,7 @@ serviceAccount:
   # Specifies whether a service account should be created
   create: true
   # Annotations to add to the service account
-  annotations: { }
+  annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
@@ -37,7 +41,8 @@ securityContext: {}
 # runAsUser: 1000
 
 service:
-  type: ClusterIP
+  type: LoadBalancer
+  port: 8888
 
 # OpenShift specific settings
 route:
@@ -47,11 +52,16 @@ route:
   host: oidc.apps.sandbox.x8i5.p1.openshiftapps.com
 
 ingress:
-  enable: true
-  annotations: 
-    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+  enabled: true
+  annotations: {}
+#    kubernetes.io/ingress.class: nginx
+#    cert-manager.io/issuer: oidc-letsencrypt
+#    kubernetes.io/tls-acme: "true"
   hosts:
     - host: oidc.apps.sandbox.x8i5.p1.openshiftapps.com
+      paths:
+        - path: /
+        - path: /PlantaServerAdapter
   tls: []
 #    - secretName: oidc-tls
 #      hosts:
@@ -67,6 +77,7 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
+logLevel: "warn" # [trace|debug|info|warn|error|fatal|panic] (default: warn)
 # OIDC configuration
 # For more information, see: https://help.planta.de/tec/all/de/oidc-mit-planta-secure-19792984.html
 oidcSettings:
@@ -86,89 +97,3 @@ oidcSettings:
     host: secure.apps.sandbox.x8i5.p1.openshiftapps.com
     port: 8181
     path: /PlantaServerAdapter/_oauth
-
-traefik:
-  ingressClass:
-    enabled: true
-    isDefaultClass: true
-    # name: my-custom-class
-  providers:
-    kubernetesCRD:
-      allowExternalNameServices: true  
-    kubernetesIngress:
-      enabled: true
-      namespaces: []
-    file:
-      enabled: false
-      watch: true
-      content: ""
-  additionalArguments:
-    - "--global.checkNewVersion=false"
-    - "--global.sendAnonymousUsage=false"
-    # - "--log.level=DEBUG"
-  ports:
-    web:
-      port: 8000
-      protocol: TCP
-      # redirectTo: websecure
-    websecure:
-      port: 8443
-      protocol: TCP
-      tls:
-        enabled: true
-        options: ""
-        certResolver: ""
-        domains: []
-      middlewares: []
-  tlsOptions: {}
-  tlsStore: {}
-  service:
-    enabled: true
-    single: true
-    type: LoadBalancer
-    annotations: {}
-    annotationsTCP: {}
-    annotationsUDP: {}
-    labels: {}
-    spec: {}
-    loadBalancerSourceRanges: []
-    # loadBalancerClass: service.k8s.aws/nlb
-    externalIPs: []
-    additionalServices: {}
-  autoscaling:
-    enabled: true
-    maxReplicas: 3
-  certResolvers: {}
-  hostNetwork: false
-  rbac:
-    enabled: true
-    namespaced: false
-    secretResourceNames: []
-  podSecurityPolicy:
-    enabled: false
-  serviceAccount:
-    name: ""
-  serviceAccountAnnotations: {}
-  resources: {}
-  # requests:
-  #   cpu: "100m"
-  #   memory: "50Mi"
-  # limits:
-  #   cpu: "300m"
-  #   memory: "150Mi"
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  topologySpreadConstraints: []
-  priorityClassName: ""
-  securityContext:
-    capabilities:
-      drop: [ALL]
-    readOnlyRootFilesystem: true
-    allowPrivilegeEscalation: false
-  podSecurityContext:
-    fsGroupChangePolicy: "OnRootMismatch"
-    runAsGroup: 65532
-    runAsNonRoot: true
-    runAsUser: 65532
-  extraObjects: []

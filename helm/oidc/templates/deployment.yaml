@@ -29,13 +29,62 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       terminationGracePeriodSeconds: 60
+      volumes:
+        - name: traefik-conf
+          configMap:
+            name: {{ include "oidc.fullname" . }}
       containers:
-        - name: forward-auth-webclient
+        - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: {{ .Values.service.port }}
+              scheme: HTTP
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          startupProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /ping
+              port: {{ .Values.service.port }}
+              scheme: HTTP
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            failureThreshold: 2
+            httpGet:
+              path: /ping
+              port: {{ .Values.service.port }}
+              scheme: HTTP
+            periodSeconds: 300
+            successThreshold: 1
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: traefik-conf
+              mountPath: /etc/traefik/traefik.toml
+              subPath: traefik.toml
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+        - name: forward-auth-webclient
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.forwardAuthImage.repository }}:{{ .Values.forwardAuthImage.tag | default "latest" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
             - name: INSECURE_COOKIE
               value: {{ .Values.oidcSettings.insecureCookie | quote }}
             - name: DEFAULT_PROVIDER
@@ -99,9 +148,11 @@ spec:
         - name: forward-auth-secure
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.forwardAuthImage.repository }}:{{ .Values.forwardAuthImage.tag | default "latest" }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
             - name: INSECURE_COOKIE
               value: {{ .Values.oidcSettings.insecureCookie | quote }}
             - name: DEFAULT_PROVIDER
