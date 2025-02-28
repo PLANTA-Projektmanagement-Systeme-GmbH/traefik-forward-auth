@@ -21,7 +21,7 @@ COPY docker-entrypoint.sh /
 RUN chmod 0750 /docker-entrypoint.sh
 
 # Copy into scratch container
-FROM alpine:3.13
+FROM alpine:3
 
 ENV WORKDIR=/oidc
 
