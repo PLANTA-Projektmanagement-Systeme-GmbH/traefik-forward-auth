@@ -1,4 +1,4 @@
-FROM golang:1.13-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Setup
 RUN mkdir -p /go/src/github.com/thomseddon/traefik-forward-auth
@@ -13,15 +13,15 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -installsuf
 
 # Get Traefik Binary
 RUN set -x && \
-	wget "https://github.com/traefik/traefik/releases/download/v2.0.0/traefik_v2.0.0_linux_386.tar.gz" -O "/tmp/traefik_v2.0.0_linux_386.tar.gz" && \
-	tar -xvf "/tmp/traefik_v2.0.0_linux_386.tar.gz" -C /tmp/ traefik
+	wget "https://github.com/traefik/traefik/releases/download/v2.11.21/traefik_v2.11.21_linux_amd64.tar.gz" -O "/tmp/traefik_v2.11.21_linux_amd64.tar.gz" && \
+	tar -xvf "/tmp/traefik_v2.11.21_linux_amd64.tar.gz" -C /tmp/ traefik
 
 # Add entrypoint script
 COPY docker-entrypoint.sh /
 RUN chmod 0750 /docker-entrypoint.sh
 
 # Copy into scratch container
-FROM alpine:3
+FROM alpine:3.21
 
 ENV WORKDIR=/oidc
 
